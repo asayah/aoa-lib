@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # wait for bookinfo deployment
-./tools/wait-for-rollout.sh deployment flagger gloo-system 10
+$SCRIPT_DIR/tools/wait-for-rollout.sh deployment flagger gloo-system 10

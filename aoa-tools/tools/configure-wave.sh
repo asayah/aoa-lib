@@ -1,7 +1,7 @@
 #!/bin/bash
 #set -e
 
-environment_name=${1:-""}
+env_path=${1:-""}
 wave_name=${2:-""}
 environment_overlay=${3:-""} # prod, dev, base
 cluster_context=${4:-""}
@@ -14,12 +14,12 @@ target_branch=${7:-""}
 #source $SCRIPT_DIR/../../${vars_file}
 
 # check to see if environment name variable was passed through, if not prompt for it
-if [[ ${environment_name} == "" ]]
-  then
-    # provide environment name
-    echo "Please provide the environment name to use (i.e. prod, dev):"
-    read environment_name
-fi
+#if [[ ${environment_name} == "" ]]
+#  then
+#    # provide environment name
+#    echo "Please provide the environment name to use (i.e. prod, dev):"
+#    read environment_name
+#fi
 
 # check to see if wave name variable was passed through, if not prompt for it
 if [[ ${wave_name} == "" ]]
@@ -82,7 +82,7 @@ spec:
   source:
     repoURL: https://github.com/${github_username}/${repo_name}/
     targetRevision: ${target_branch}
-    path: environments/${environment_name}/${wave_name}/${environment_overlay}/active/
+    path: $env_path/${wave_name}/${environment_overlay}/active/
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:

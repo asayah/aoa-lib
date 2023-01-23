@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # wait for podinfo deployment
-./tools/wait-for-rollout.sh deployment podinfo-primary test 10
+$SCRIPT_DIR/tools/wait-for-rollout.sh deployment podinfo-primary test 10
 
 echo 
 echo "installation complete:"
