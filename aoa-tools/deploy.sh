@@ -3,7 +3,7 @@
 
 ############################################################
 # Defaults
-environment_overlay=base
+environment_overlay=m1
 install_infra=false
 export SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ############################################################
@@ -29,7 +29,6 @@ precheck()
 {
 
 check_env
-check_git
 
 echo "##########################"
 echo "    AoA Lib - Precheck    "
@@ -48,10 +47,6 @@ fi
    
 }
 
-check_git()
-{
-   #TODO: check if valid git repo and extract repo name, branch...
-}
 
 check_env()
 {
