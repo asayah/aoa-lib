@@ -1,13 +1,12 @@
 #!/bin/bash
 #set -e
 
-
 ############################################################
 # Defaults
 environment_overlay=base
 install_infra=false
+export SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ############################################################
-
 
 ############################################################
 # Help                                                     #
@@ -29,6 +28,9 @@ help()
 precheck()
 {
 
+check_env
+check_git
+
 echo "##########################"
 echo "    AoA Lib - Precheck    "
 echo "Environemnt: $env"
@@ -46,6 +48,10 @@ fi
    
 }
 
+check_git()
+{
+   #TODO: check if valid git repo and extract repo name, branch...
+}
 
 check_env()
 {
@@ -61,13 +67,22 @@ check_env()
 install_infra()
 {
    check_env
-   export install_infra=true
+   echo "Deploying infra..."
+   source $SCRIPT_DIR/tools/k3d-install.sh
+
+   if [ -d "$env/.infra" ]
+   then
+      cd $env/.infra
+      for i in $(ls | sort -n); do 
+            create-k3d-cluster $(cat $i | yq .name) ${i}
+      done      
+      fi 
 }
 
 
 ############################################################
 # Get the options
-while getopts "hif:o:" option; do
+while getopts "f:o:hi" option; do
    case $option in
       h) # display Help
          help
@@ -75,8 +90,9 @@ while getopts "hif:o:" option; do
       f) # env
          env=${OPTARG};;
       i) # infra
-         install_infra;;
+         install_infra=true;;
       o) # overlay
+         #TODO: overlay not working properly 
          environment_overlay=${OPTARG};;
      \?) # Invalid option
          echo "Error: Invalid option"
@@ -85,10 +101,14 @@ while getopts "hif:o:" option; do
    esac
 done
 
-check_env
+
 precheck
 
-export SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+if [[ ${install_infra} == true ]]
+then
+   install_infra
+fi 
 
 cd $env
 git_root="$(git rev-parse --show-toplevel)/"
@@ -128,6 +148,12 @@ $SCRIPT_DIR/tools/wait-for-rollout.sh deployment argocd-server argocd 20 ${clust
 cd $env
 # deploy app of app waves
 for i in $(ls | sort -n); do 
+
+  if [[ ${i} == ".infra" ]]
+  then
+      continue
+  fi 
+
   echo "starting ${i}"
   # run init script if it exists
   [[ -f "${i}/init.sh" ]] && ${i}/init.sh 
