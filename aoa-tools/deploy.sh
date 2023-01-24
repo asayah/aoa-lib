@@ -3,7 +3,6 @@
 
 ############################################################
 # Defaults
-environment_overlay=m1
 install_infra=false
 export SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ############################################################
@@ -16,7 +15,7 @@ help()
    # Display Help
    echo "AoA installer."
    echo
-   echo "Syntax: ./deploy [-f|-o|-i|-h]"
+   echo "Syntax: installer [-f|-o|-i|-h]"
    echo "options:"
    echo "-f     path to AoA files"
    echo "-o     overlay"   
@@ -30,13 +29,19 @@ precheck()
 
 check_env
 
-echo "##########################"
-echo "    AoA Lib - Precheck    "
+echo "############################################################"
+echo "################    AoA Lib - Precheck    ##################"
 echo "Environemnt: $env"
 echo "Install infra: $install_infra"
 echo "Overlay: $environment_overlay"
-echo "##########################"
 echo ""
+check_git
+
+echo "############################################################"
+echo ""
+
+
+
 echo "Continue? [Y/N]"
 
 read should_continue
@@ -47,7 +52,6 @@ fi
    
 }
 
-
 check_env()
 {
   if [[ ${env} == "" ]] || [ ! -d "$env" ]
@@ -57,6 +61,46 @@ check_env()
     help
     exit 1
    fi 
+}
+
+check_git()
+{
+   cd ${env}
+   # Check if valid git repo 
+   is_valid_git_repo=$(git rev-parse --is-inside-work-tree)
+   if [[ ${is_valid_git_repo} != true ]]
+   then
+      echo "Error: ${env} is not a valid git repo."
+      exit 1
+   fi 
+   # Check if branch is in sync with remote
+   git remote update > /dev/null 2>&1 
+   local_changes=$(git status -uno -u -s)
+   remote_hash=$(git ls-remote --head --exit-code origin $(git branch --show-current) | cut -f 1)
+   local_hash=$(git rev-parse $(git branch --show-current))
+
+   if [[ ${local_changes} != "" ]] || [[ ${remote_hash} != ${local_hash} ]]
+   then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "!!!!!!!!!!!!!!!!!!!!   Warning   !!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo ""
+      echo "Git: the AoA files local changes are not in sync with the   "
+      echo "remote!"
+      echo ""              
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo ""   
+   fi 
+
+   # Get user, repo and branch 
+   BASE=$(echo $(git remote get-url origin) | sed -e "s+git@github.com:++g")
+   IFS='/' read -ra ADDR <<< "$BASE"
+   github_username=${ADDR[0]}
+   repo_name=${ADDR[1]}
+   target_branch=$(git branch --show-current)
+   echo "Github Account: $github_username"
+   echo "Repo: $repo_name"
+   echo "Branch: $target_branch"
+   echo ""
 }
 
 install_infra()
@@ -143,8 +187,7 @@ $SCRIPT_DIR/tools/wait-for-rollout.sh deployment argocd-server argocd 20 ${clust
 cd $env
 # deploy app of app waves
 for i in $(ls | sort -n); do 
-
-  if [[ ${i} == ".infra" ]]
+  if [[ ${i} == ".infra" ]] || [[ ${i} == "vars.env" ]]
   then
       continue
   fi 
