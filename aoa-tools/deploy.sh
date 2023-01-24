@@ -60,7 +60,11 @@ check_env()
     echo "Error: env folder not found, please use -f to choose a valid env folder."
     help
     exit 1
-   fi 
+   fi
+
+   #normalize path 
+   cd $env
+   env=$(pwd)
 }
 
 check_git()
