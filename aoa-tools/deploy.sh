@@ -28,6 +28,7 @@ precheck()
 {
 
 check_env
+source_env_vars
 
 echo "############################################################"
 echo "################    AoA Lib - Precheck    ##################"
@@ -39,7 +40,6 @@ check_git
 
 echo "############################################################"
 echo ""
-
 
 
 echo "Continue? [Y/N]"
@@ -107,6 +107,15 @@ check_git()
    echo ""
 }
 
+source_env_vars(){
+cd $env
+tmp_env=$env
+source vars.env && export $(sed '/^#/d' vars.env | cut -d= -f1)
+unset env
+export env=$tmp_env
+unset tmp_env
+}
+
 install_infra()
 {
    check_env
@@ -144,9 +153,7 @@ while getopts "f:o:hi" option; do
    esac
 done
 
-
 precheck
-
 
 if [[ ${install_infra} == true ]]
 then
@@ -157,8 +164,6 @@ cd $env
 git_root="$(git rev-parse --show-toplevel)/"
 export env_path=$(echo $PWD | sed -e "s+$git_root++g")
 
-# source vars.env 
-source vars.env && export $(sed '/^#/d' vars.env | cut -d= -f1)
 
 #TODO: this should be in a init phase
 # check to see if defined contexts exist
