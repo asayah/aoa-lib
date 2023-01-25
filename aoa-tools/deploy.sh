@@ -24,23 +24,24 @@ help()
    echo
 }
 
-precheck()
+pre_install()
 {
 
 check_env
 source_env_vars
 
 echo "############################################################"
-echo "################    AoA Lib - Precheck    ##################"
+echo "###############   AoA Lib - Pre-install   ##################"
 echo "Environemnt: $env"
 echo "Install infra: $install_infra"
 echo "Overlay: $environment_overlay"
 echo ""
 check_git
-
+echo "Github Account: $github_username"
+echo "Repo: $repo_name"
+echo "Branch: $target_branch"
 echo "############################################################"
 echo ""
-
 
 echo "Continue? [Y/N]"
 
@@ -69,6 +70,19 @@ check_env()
 
 check_git()
 {
+   if [[ "$github_username$target_branch$repo_name" != "" ]]
+   then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "!!!!!!!!!!!!!!!!!!!!   Warning   !!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo ""
+      echo "Git: github_username and/or target_branch and/or repo_name   "
+      echo "has/have been passed in the vars.env, skipping Git validation"
+      echo ""              
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo ""   
+      return
+   fi 
+
    cd ${env}
    # Check if valid git repo 
    is_valid_git_repo=$(git rev-parse --is-inside-work-tree)
@@ -101,9 +115,6 @@ check_git()
    github_username=${ADDR[0]}
    repo_name=${ADDR[1]}
    target_branch=$(git branch --show-current)
-   echo "Github Account: $github_username"
-   echo "Repo: $repo_name"
-   echo "Branch: $target_branch"
    echo ""
 }
 
@@ -144,7 +155,6 @@ while getopts "f:o:hi" option; do
       i) # infra
          install_infra=true;;
       o) # overlay
-         #TODO: overlay not working properly 
          environment_overlay=${OPTARG};;
      \?) # Invalid option
          echo "Error: Invalid option"
@@ -153,7 +163,7 @@ while getopts "f:o:hi" option; do
    esac
 done
 
-precheck
+pre_install
 
 if [[ ${install_infra} == true ]]
 then
