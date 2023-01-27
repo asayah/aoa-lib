@@ -85,7 +85,7 @@ check_git()
 
    cd ${env}
    # Check if valid git repo 
-   is_valid_git_repo=$(git rev-parse --is-inside-work-tree)
+   is_valid_git_repo=$(git rev-parse --is-inside-work-tree) > /dev/null 2>&1
    if [[ ${is_valid_git_repo} != true ]]
    then
       echo "Error: ${env} is not a valid git repo."
@@ -109,8 +109,16 @@ check_git()
       echo ""   
    fi 
 
-   # Get user, repo and branch 
-   BASE=$(echo $(git remote get-url origin) | sed -e "s+git@github.com:++g")
+   origin=$(git remote get-url origin)  
+   if [[ $( echo "$origin" | grep git@github.com) != "" ]]
+   then
+      # shh repo
+      BASE=$(echo $origin | sed -e "s+git@github.com:++g") 
+   elif [[ $( echo "$origin" | grep https://github.com) != "" ]]
+   then 
+      # http repo
+      BASE=$(echo $origin | sed -e "s+https://github.com/++g" | sed -e "s+.git++g")   
+   fi
    IFS='/' read -ra ADDR <<< "$BASE"
    github_username=${ADDR[0]}
    repo_name=${ADDR[1]}
