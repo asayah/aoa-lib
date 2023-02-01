@@ -5,6 +5,7 @@
 # Defaults
 install_infra=false
 export SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+environment_overlay="m1"
 ############################################################
 
 ############################################################
@@ -133,6 +134,15 @@ source vars.env && export $(sed '/^#/d' vars.env | cut -d= -f1)
 unset env
 export env=$tmp_env
 unset tmp_env
+
+# check to see if environment overlay variable was passed through, if not prompt for it
+if [[ ${environment_overlay} == "" ]]
+  then
+    # provide environment overlay
+    echo "Please provide the environment overlay to use (i.e. prod, dev):"
+    read environment_overlay
+fi
+
 }
 
 install_infra()
@@ -189,14 +199,6 @@ if [[ $(kubectl config get-contexts | grep ${cluster_context}) == "" ]] ; then
   echo "Check Failed: ${cluster_context} context does not exist. Please check to see if you have the clusters available"
   echo "Run 'kubectl config get-contexts' to see currently available contexts. If the clusters are available, please make sure that they are named correctly. Default is ${cluster_context}"
   exit 1;
-fi
-
-# check to see if environment overlay variable was passed through, if not prompt for it
-if [[ ${environment_overlay} == "" ]]
-  then
-    # provide environment overlay
-    echo "Please provide the environment overlay to use (i.e. prod, dev):"
-    read environment_overlay
 fi
 
 # install argocd
